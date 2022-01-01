@@ -18,13 +18,13 @@ import sys
 
 
 
-print(sys.argv[1])
-service_uid = sys.argv[1]
+# print(sys.argv[1])
+# service_uid = sys.argv[1]
 
-if(len(sys.argv) > 2):
-	supp_service_link = sys.argv[2]
-	supp_name = sys.argv[3]
-	supp_type = sys.argv[4]
+# if(len(sys.argv) > 2):
+# 	supp_service_link = sys.argv[2]
+# 	supp_name = sys.argv[3]
+# 	supp_type = sys.argv[4]
 
 def get_soup(link):
     fp = urllib.request.urlopen(link)
@@ -142,135 +142,148 @@ def extract_data(layer_link, table_name, format_, geom_t):
 
     return (start, end, count)
 
-
-
-
 ### connection to mongo
 client = pymongo.MongoClient("""mongodb://apoorv:M0ngoParce1n1@cluster0-shard-00-00.mpmef.mongodb.net:27017,
-	cluster0-shard-00-01.mpmef.mongodb.net:27017,
-	cluster0-shard-00-02.mpmef.mongodb.net:27017/myDB?ssl=true&replicaSet=atlas-7nzlgf-shard-0&authSource=admin&retryWrites=true&w=majority""")
+    cluster0-shard-00-01.mpmef.mongodb.net:27017,
+    cluster0-shard-00-02.mpmef.mongodb.net:27017/myDB?ssl=true&replicaSet=atlas-7nzlgf-shard-0&authSource=admin&retryWrites=true&w=majority""")
 
 db = client.arcgisLibrary
 coll = db.directories
-doc_object = None
-doc_object = coll.find_one({ "_id": service_uid })
 
 
-if doc_object is not None:
-    supp_service_link = doc_object['root']
-    if 'layers' in doc_object.keys():
-        all_layers = doc_object['layers']
-    else:
-        all_layers = traverse(supp_service_link, [])
-        result = coll.update_one({"_id" : service_uid },{"$set": {"layers": all_layers}})
-else:
-    all_layers = traverse(supp_service_link, [])
-    arcgis_link = {
-      '_id': service_uid,
-      'name': supp_name,
-      'jurisdiction': supp_type,
-      'root': supp_service_link,
-      'layers': all_layers
-    }
-    result = coll.insert_one(arcgis_link)
-    # doc_object = coll.find_one({ "_id": service_uid })
-    # supp_service_link = doc_object['root']
+def start_scraping(service_uid):
+
+    doc_object = None
+    doc_object = coll.find_one({ "_id": service_uid })
 
 
-# print(all_layers)
-
-for i in range(len(all_layers)):
-
-    print("!"*100)
-    print("LAYER STARTING")
-
-    layer_object = coll.find_one({ "_id": service_uid + '_' + str(i) })
-
-    if layer_object is None:
-        layer_link = all_layers[i]['link']
-        print(layer_link)
-        soup = get_soup(layer_link)
-
-        query_link = layer_link + '/query'
-        query_soup = get_soup(query_link)
-        selects = query_soup.find('select', {"name" : "f"})
-        print('SELECTS', selects)
-        print('SELECTS ARE WORKING')
-        if selects is None:
-            continue
-        formats = [x.text.lower() for x in selects.find_all('option')]
-        print(formats)
-        if 'geojson' in formats:
-            form = 'geojson'
-        elif 'json' in formats:
-            form = 'json'
-        print(form)
-
-        geom_elem = soup('b',text=re.compile(r'Geometry Type:'))[0]
-        geom_type = geom_elem.next_sibling.strip()
-        if geom_type == 'esriGeometryPolygon':
-            geom_t = 'MULTIPOLYGON'
-        if geom_type == 'esriGeometryPolyline':
-            geom_t = 'MULTILINESTRING'
-        if geom_type == 'esriGeometryPoint':
-            geom_t = 'POINT'
-        name = None
-        mrc = None
-        dfc = None
-        description = None
-        sqf = None
-        supported_operations = None
-
-        name_elems = soup('b',text=re.compile(r'(?i)\bname\b'))
-        if len(name_elems) > 0:
-        	name = name_elems[0].next_sibling.strip()
-
-        mrc_elems = soup('b',text=re.compile(r'(?i)\bmax\b\s\brecord\b\s\bcount\b'))
-        if len(mrc_elems) > 0:
-        	mrc = int(mrc_elems[0].next_sibling.strip())
-
-        df_elems = soup('b',text=re.compile(r'(?i)\bdisplay\b\s\bfield\b'))
-        if len(df_elems) > 0:
-        	dfc = df_elems[0].next_sibling.strip()
-
-        desc_elems = soup('b',text=re.compile(r'(?i)\bdescription\b'))
-        if len(desc_elems) > 0:
-        	description = desc_elems[0].next_sibling.strip()
-
-        sqf_elems = soup('b',text=re.compile(r'(?i)\bsupported\b\s\bquery\b\s\bformats\b'))
-        if len(sqf_elems) > 0:
-            sqf = sqf_elems[0].next_sibling.strip()
+    if doc_object is not None:
+        supp_service_link = doc_object['root']
+        r = coll.update_one({"_id" : service_uid },{"$set": {"status": 'IN_PROCESS'}})
+        if 'layers' in doc_object.keys():
+            all_layers = doc_object['layers']
+        else:
+            all_layers = traverse(supp_service_link, [])
+            result = coll.update_one({"_id" : service_uid },{"$set": {"layers": all_layers}})
+    # else:
+    #     all_layers = traverse(supp_service_link, [])
+    #     arcgis_link = {
+    #       '_id': service_uid,
+    #       'name': supp_name,
+    #       'type': supp_type,
+    #       'root': supp_service_link,
+    #       'layers': all_layers,
+    #       'status': 'IN_PROCESS'
+    #     }
+    #     result = coll.insert_one(arcgis_link)
+        # doc_object = coll.find_one({ "_id": service_uid })
+        # supp_service_link = doc_object['root']
 
 
-        layer_mng_obj = {}
-        layer_mng_obj['_id'] = service_uid + '_' + str(i)
-        layer_mng_obj['parent'] = service_uid
-        layer_mng_obj['layer_name'] = all_layers[i]['name']
-        layer_mng_obj['geom_t'] = geom_t
-        layer_mng_obj['arcgeom_t'] = geom_type
-        layer_mng_obj['essential'] = True
-        layer_mng_obj['name'] = name
-        layer_mng_obj['max_record_count'] = mrc
-        layer_mng_obj['display_fields'] = dfc
-        layer_mng_obj['description'] = description
-        layer_mng_obj['format'] = form
-        layer_mng_obj['workable'] = False
+    # print(all_layers)
+
+    for i in range(len(all_layers)):
+
+        print("!"*100)
+        print("LAYER STARTING")
+
+        layer_object = coll.find_one({ "_id": service_uid + '_' + str(i) })
+
+        if layer_object is None:
+            layer_link = all_layers[i]['link']
+            print(layer_link)
+            soup = get_soup(layer_link)
+
+            query_link = layer_link + '/query'
+            query_soup = get_soup(query_link)
+            selects = query_soup.find('select', {"name" : "f"})
+            print('SELECTS', selects)
+            print('SELECTS ARE WORKING')
+            if selects is None:
+                continue
+            formats = [x.text.lower() for x in selects.find_all('option')]
+            print(formats)
+            if 'geojson' in formats:
+                form = 'geojson'
+            elif 'json' in formats:
+                form = 'json'
+            print(form)
+
+            geom_elem = soup('b',text=re.compile(r'Geometry Type:'))[0]
+            geom_type = geom_elem.next_sibling.strip()
+            if geom_type == 'esriGeometryPolygon':
+                geom_t = 'MULTIPOLYGON'
+            if geom_type == 'esriGeometryPolyline':
+                geom_t = 'MULTILINESTRING'
+            if geom_type == 'esriGeometryPoint':
+                geom_t = 'POINT'
+            name = None
+            mrc = None
+            dfc = None
+            description = None
+            sqf = None
+            supported_operations = None
+
+            name_elems = soup('b',text=re.compile(r'(?i)\bname\b'))
+            if len(name_elems) > 0:
+            	name = name_elems[0].next_sibling.strip()
+
+            mrc_elems = soup('b',text=re.compile(r'(?i)\bmax\b\s\brecord\b\s\bcount\b'))
+            if len(mrc_elems) > 0:
+            	mrc = int(mrc_elems[0].next_sibling.strip())
+
+            df_elems = soup('b',text=re.compile(r'(?i)\bdisplay\b\s\bfield\b'))
+            if len(df_elems) > 0:
+            	dfc = df_elems[0].next_sibling.strip()
+
+            desc_elems = soup('b',text=re.compile(r'(?i)\bdescription\b'))
+            if len(desc_elems) > 0:
+            	description = desc_elems[0].next_sibling.strip()
+
+            sqf_elems = soup('b',text=re.compile(r'(?i)\bsupported\b\s\bquery\b\s\bformats\b'))
+            if len(sqf_elems) > 0:
+                sqf = sqf_elems[0].next_sibling.strip()
 
 
-        
-        print('ID:',service_uid + '_' + str(i))
+            layer_mng_obj = {}
+            layer_mng_obj['_id'] = service_uid + '_' + str(i)
+            layer_mng_obj['parent'] = service_uid
+            layer_mng_obj['layer_name'] = all_layers[i]['name']
+            layer_mng_obj['geom_t'] = geom_t
+            layer_mng_obj['arcgeom_t'] = geom_type
+            layer_mng_obj['essential'] = True
+            layer_mng_obj['name'] = name
+            layer_mng_obj['max_record_count'] = mrc
+            layer_mng_obj['display_fields'] = dfc
+            layer_mng_obj['description'] = description
+            layer_mng_obj['format'] = form
+            layer_mng_obj['workable'] = False
 
-        try:
-            print("Worked!!!!")
-            start, end, count = extract_data(layer_link, service_uid + '_' + str(i), form, geom_t)
-            layer_mng_obj['workable'] = True
-            layer_mng_obj['start'] = start
-            layer_mng_obj['end'] = end
-            layer_mng_obj['count'] = count
-            result = coll.insert_one(layer_mng_obj)
-        except Exception as e:
-            print("Did not work!!!")
-            print(e)
-            layer_mng_obj['error'] = str(e)
-            result = coll.insert_one(layer_mng_obj)
+
+            
+            print('ID:',service_uid + '_' + str(i))
+
+            try:
+                print("Worked!!!!")
+                start, end, count = extract_data(layer_link, service_uid + '_' + str(i), form, geom_t)
+                layer_mng_obj['workable'] = True
+                layer_mng_obj['start'] = start
+                layer_mng_obj['end'] = end
+                layer_mng_obj['count'] = count
+                result = coll.insert_one(layer_mng_obj)
+            except Exception as e:
+                print("Did not work!!!")
+                print(e)
+                layer_mng_obj['error'] = str(e)
+                result = coll.insert_one(layer_mng_obj)
+
+    r = coll.update_one({"_id" : service_uid },{"$set": {"status": 'DONE'}})
+
+
+doc_object = coll.find_one({ "status": 'NOT_DONE' })
+print(doc_object)
+while doc_object is not None:
+    uid = doc_object['_id']
+    start_scraping(uid)
+    doc_object = coll.find_one({ "status": 'NOT_DONE' })
 
