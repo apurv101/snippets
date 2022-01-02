@@ -133,9 +133,9 @@ def extract_data(layer_link, table_name, format_, geom_t):
         having=&resultOffset=&resultRecordCount=&returnZ=false&returnM=false&
         returnExceededLimitFeatures=true&quantizationParameters=&sqlFormat=none&f={format_}&token=""".replace("\n", "").replace(" ", "")
         print(link)
-        x = urllib.request.urlretrieve(link, "test.geojson")
+        x = urllib.request.urlretrieve(link, f"{table_name}_test.geojson")
         print(x)
-        query = f'ogr2ogr -f "PostgreSQL" PG:"host=raw-data.c91397hbzfpf.us-east-1.rds.amazonaws.com user=postgres dbname=db1 password=arcgisvault" test.geojson -nln "{table_name}" -nlt {geom_t}'
+        query = f'ogr2ogr -f "PostgreSQL" PG:"host=raw-data.c91397hbzfpf.us-east-1.rds.amazonaws.com user=postgres dbname=db1 password=arcgisvault" {table_name}_test.geojson -nln "{table_name}" -nlt {geom_t}'
         print(query)
         y = os.system(query)
         print(y)
