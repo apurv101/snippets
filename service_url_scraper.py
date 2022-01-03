@@ -10,6 +10,18 @@ import os
 import sys
 
 
+### connection to mongo
+client = pymongo.MongoClient("""mongodb://apoorv:M0ngoParce1n1@cluster0-shard-00-00.mpmef.mongodb.net:27017,
+    cluster0-shard-00-01.mpmef.mongodb.net:27017,
+    cluster0-shard-00-02.mpmef.mongodb.net:27017/myDB?ssl=true&replicaSet=atlas-7nzlgf-shard-0&authSource=admin&retryWrites=true&w=majority""")
+
+db = client.arcgisLibrary
+coll = db.directories
+
+
+# error_coll = db.errors
+
+
 ## python3 service_url_scraper.py USCACISBB https://services3.arcgis.com/hMpg7vsYb74pEKjX/ArcGIS/rest/services 'Santa Barbara' 'City'
 ## python3 service_url_scraper.py USCACIANA https://gis.anaheim.net/server/rest/services 'Anaheim' 'City'
 ## python3 service_url_scraper.py USCACIIRA https://services2.arcgis.com/3mkVbLdbLBFHrfbK/ArcGIS/rest/services 'Irvine' 'City'
@@ -98,7 +110,7 @@ def get_data(layer_link):
     return data
 
 
-def extract_data(layer_link, table_name, format_, geom_t):
+def extract_data(layer_link, table_name, format_, geom_t, service_uid):
         
     print(layer_link)
     
@@ -133,22 +145,15 @@ def extract_data(layer_link, table_name, format_, geom_t):
         having=&resultOffset=&resultRecordCount=&returnZ=false&returnM=false&
         returnExceededLimitFeatures=true&quantizationParameters=&sqlFormat=none&f={format_}&token=""".replace("\n", "").replace(" ", "")
         print(link)
-        x = urllib.request.urlretrieve(link, f"{table_name}_test.geojson")
+        x = urllib.request.urlretrieve(link, f"{service_uid}_test.geojson")
         print(x)
-        query = f'ogr2ogr -f "PostgreSQL" PG:"host=raw-data.c91397hbzfpf.us-east-1.rds.amazonaws.com user=postgres dbname=db1 password=arcgisvault" {table_name}_test.geojson -nln "{table_name}" -nlt {geom_t}'
+        query = f'ogr2ogr -f "PostgreSQL" PG:"host=raw-data.c91397hbzfpf.us-east-1.rds.amazonaws.com user=postgres dbname=db1 password=arcgisvault" {service_uid}_test.geojson -nln "{table_name}" -nlt {geom_t}'
         print(query)
         y = os.system(query)
         print(y)
 
     return (start, end, count)
 
-### connection to mongo
-client = pymongo.MongoClient("""mongodb://apoorv:M0ngoParce1n1@cluster0-shard-00-00.mpmef.mongodb.net:27017,
-    cluster0-shard-00-01.mpmef.mongodb.net:27017,
-    cluster0-shard-00-02.mpmef.mongodb.net:27017/myDB?ssl=true&replicaSet=atlas-7nzlgf-shard-0&authSource=admin&retryWrites=true&w=majority""")
-
-db = client.arcgisLibrary
-coll = db.directories
 
 
 def start_scraping(service_uid):
@@ -265,7 +270,7 @@ def start_scraping(service_uid):
 
             try:
                 print("Worked!!!!")
-                start, end, count = extract_data(layer_link, service_uid + '_' + str(i), form, geom_t)
+                start, end, count = extract_data(layer_link, service_uid + '_' + str(i), form, geom_t, service_uid)
                 layer_mng_obj['workable'] = True
                 layer_mng_obj['start'] = start
                 layer_mng_obj['end'] = end
