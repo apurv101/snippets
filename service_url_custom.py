@@ -79,9 +79,19 @@ def extract_data(layer_link, table_name, format_, geom_t):
         cacheHint=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&
         having=&resultOffset=&resultRecordCount=&returnZ=false&returnM=false&
         returnExceededLimitFeatures=true&quantizationParameters=&sqlFormat=none&f={format_}&token=""".replace("\n", "").replace(" ", "")
-        print(link)
-        x = urllib.request.urlretrieve(link, f"{table_name}_test.geojson")
-        print(x)
+
+        trying = True
+
+        while trying:
+            try: 
+                print(link)
+                x = urllib.request.urlretrieve(link, f"{table_name}_test.geojson")
+                print(x)
+                trying = False
+            except RemoteDisconnected:
+                trying = True
+
+
         query = f'ogr2ogr -f "PostgreSQL" PG:"host=raw-data.c91397hbzfpf.us-east-1.rds.amazonaws.com user=postgres dbname=db_karnataka password=arcgisvault" {table_name}_test.geojson -nln "{table_name}" -nlt {geom_t}'
 
         # query = f'ogr2ogr -f "PostgreSQL" PG:"dbname=test" {table_name}_test.geojson -nln "{table_name}" -nlt {geom_t}'
