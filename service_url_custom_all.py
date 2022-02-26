@@ -60,10 +60,12 @@ def extract_data(layer_link, table_name, format_, geom_t):
     print(end)
 
     count = len(id_data['objectIds'])
+
+    cover = 500
     
-    for i in range(start, end, 1000):
+    for i in range(start, end, cover):
         from_ = i
-        to_ = i + 1000
+        to_ = i + cover
         print('Starting from ', from_, ' to ', to_)
         link = f"""{layer_link}/query?where={id_data['objectIdFieldName']}+%3E%3D+{from_}+and+
         {id_data['objectIdFieldName']}+%3C+{to_}&time=&geometry=&geometryType=esriGeometryEnvelope&
@@ -103,7 +105,7 @@ def extract_data(layer_link, table_name, format_, geom_t):
 start, end, count = extract_data(layer_link, table_name, format_, geom_t)
 
 
-# python service_url_custom_all.py 'https://kgis.ksrsac.in/kgismaps/rest/services/CadastralData_Admin/Dynamic_CadastralData_Admin/MapServer/4/query' 'village' geojson MULTIPOLYGON
+# python service_url_custom_all.py 'https://kgis.ksrsac.in/kgismaps/rest/services/CadastralData_Admin/Dynamic_CadastralData_Admin/MapServer/3/query' 'hobli' geojson MULTIPOLYGON
 
 
 
