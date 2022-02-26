@@ -68,8 +68,8 @@ def extract_data(layer_link, table_name, format_, geom_t):
         from_ = i
         to_ = i + 1000
         print('Starting from ', from_, ' to ', to_)
-        link = f"""{layer_link}/query?where={id_data['objectIdFieldName']}+%3E%3D+{from_}+and+
-        {id_data['objectIdFieldName']}+%3C+{to_}&time=&geometry=&geometryType=esriGeometryEnvelope&
+        link = f"""{layer_link}/query?where=OBJECTID+%3E%3D+{from_}+and+
+        OBJECTID+%3C+{to_}&time=&geometry=&geometryType=esriGeometryEnvelope&
         inSR=&spatialRel=esriSpatialRelIntersects&resultType=none&distance=0.0&units=esriSRUnit_Meter&
         returnGeodetic=false&outFields=*&returnGeometry=true&returnCentroid=false&
         featureEncoding=esriDefault&multipatchOption=xyFootprint&maxAllowableOffset=&
