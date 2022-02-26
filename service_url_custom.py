@@ -88,7 +88,7 @@ def extract_data(layer_link, table_name, format_, geom_t):
                 x = urllib.request.urlretrieve(link, f"{table_name}_test.geojson")
                 print(x)
                 trying = False
-            except RemoteDisconnected:
+            except:
                 trying = True
 
 
@@ -108,7 +108,7 @@ def extract_data(layer_link, table_name, format_, geom_t):
 start, end, count = extract_data(layer_link, table_name, format_, geom_t)
 
 
-# python service_url_custom.py 'https://kgis.ksrsac.in/kgismaps/rest/services/CadastralData_Admin/Dynamic_CadastralData_Admin/MapServer/0/query' 'state' geojson MULTIPOLYGON
+# python3 service_url_custom.py 'https://kgis.ksrsac.in/kgismaps/rest/services/CadastralData_Admin/Dynamic_CadastralData_Admin/MapServer/0/query' 'state' geojson MULTIPOLYGON
 
 
 
