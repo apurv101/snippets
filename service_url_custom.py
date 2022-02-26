@@ -59,7 +59,7 @@ def extract_data(layer_link, table_name, format_, geom_t):
     # print(start)
     # print(end)
 
-    start = 3000000
+    start = 3405000
     end = 17000000
 
     # count = 
