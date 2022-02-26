@@ -46,20 +46,23 @@ def extract_data(layer_link, table_name, format_, geom_t):
         
     print(layer_link)
     
-    id_link = (layer_link + "/query" + "?where=1%3D1&returnIdsOnly=true&f=json")
-    id_data = get_data(id_link)
+    # id_link = (layer_link + "/query" + "?where=1%3D1&returnIdsOnly=true&f=json")
+    # id_data = get_data(id_link)
     
-    if id_data['objectIds']:
-        start = math.floor(min(id_data['objectIds'])/1000) * 1000
-        end = math.ceil(max(id_data['objectIds'])/1000) * 1000
-    else:
-        start = 0
-        end = 0
-    print('TOTAL RANGE')
-    print(start)
-    print(end)
+    # if id_data['objectIds']:
+    #     start = math.floor(min(id_data['objectIds'])/1000) * 1000
+    #     end = math.ceil(max(id_data['objectIds'])/1000) * 1000
+    # else:
+    #     start = 0
+    #     end = 0
+    # print('TOTAL RANGE')
+    # print(start)
+    # print(end)
 
-    count = len(id_data['objectIds'])
+    start = 3000000
+    end = 17000000
+
+    # count = 
     
     for i in range(start, end, 1000):
         from_ = i
@@ -86,7 +89,7 @@ def extract_data(layer_link, table_name, format_, geom_t):
         y = os.system(query)
         print(y)
 
-    return (start, end, count)
+    return (start, end)
 
 
 
